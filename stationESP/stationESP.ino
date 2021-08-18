@@ -3,14 +3,22 @@
 #include "mbedtls/md.h"
 #include <ezTime.h>
 #include <WiFi.h>
+//#include <AsyncTCP.h>
+//#include <ESPAsyncWebServer.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME680.h>
 #include <Wire.h>
+#include "FS.h"
+#include <LittleFS.h>
 
-//Sleep modus
+//Sleep modus and wait/delay
 #define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
 //#define TIME_TO_SLEEP  60*4        /* Time ESP32 will go to sleep for minutes (in seconds) */
 #define TIME_TO_SLEEP  60*1
+
+unsigned long startMillis;  
+unsigned long currentMillis;
+const unsigned long period = 60000;
 
 //wifi
 const char* ssid       = "H369A6E844A";
@@ -56,15 +64,21 @@ int BuffSize = 0;
 
 Adafruit_BME680 bme;
 
+#define FORMAT_LITTLEFS_IF_FAILED false
+//AsyncWebServer server(80);
+
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   printHello();
 
-  Wire.begin();
+  
 
-  //init and get the time 
+ //init and get the time, Wifi
+  Wire.begin();
+  startMillis = millis();
+  
   WifiOn();
   setDebug(INFO);
   waitForSync();
@@ -93,20 +107,49 @@ void setup() {
   Samples.PresTotal = 0;
   Samples.ResTotal = 0;
   Samples.SampleCount = 0;
+
+
+//Storage
+  if(!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
+        Serial.println("LittleFS Mount Failed");
+        return;
+    } else {
+      Serial.print("LittleFS Mounted, ");
+    }
+  if(LittleFS.exists("/index.html")) {
+    Serial.println("INDEX file found");
+//    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+//      request->send(200, "text/plain", "Hello, world");
+//
+//    server.onNotFound(notFound);
+
+//    server.begin();
+    
+//    });
+  }
 }
 
 void loop() { 
-  printLocalTime();
+  
 
-  SampleStore();
+  currentMillis = millis();  //get the current "time" (actually the number of milliseconds since the program started)
+  if (currentMillis - startMillis >= period)  //test whether the period has elapsed
+  {
+    printLocalTime();
+    startMillis = currentMillis;  //IMPORTANT to save the start time of the current LED state.
+    SampleStore();
+  }
+
+
+  
   
   
   //wait or sleep
-  //delay(TIME_TO_SLEEP * 1000);
-  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR); // ESP32 wakes up timer
-  Serial.println("Going to light-sleep now");
-  Serial.flush(); 
-  esp_light_sleep_start();
+  ////delay(TIME_TO_SLEEP * 1000);
+  //esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR); // ESP32 wakes up timer
+  //Serial.println("Going to light-sleep now");
+  //Serial.flush(); 
+  //esp_light_sleep_start();
 
 }
 
