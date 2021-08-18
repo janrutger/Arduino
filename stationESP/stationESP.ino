@@ -1,13 +1,10 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
-//#include <Seeed_mbedtls.h>
 #include "mbedtls/md.h"
 #include <ezTime.h>
 #include <WiFi.h>
-//#include <bme68x.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME680.h>
-//#include <bme68x_defs.h>
 #include <Wire.h>
 
 //Sleep modus
@@ -98,9 +95,7 @@ void setup() {
   Samples.SampleCount = 0;
 }
 
-void loop() {
-  //String JSONdoc;
-  //int responseCode;
+void loop() { 
   printLocalTime();
 
   SampleStore();
