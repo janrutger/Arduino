@@ -132,7 +132,7 @@ void setup() {
 void loop() { 
   
 
-  currentMillis = millis();  //get the current "time" (actually the number of milliseconds since the program started)
+  currentMillis = millis() - period;  //get the current "time" (actually the number of milliseconds since the program started)
   if (currentMillis - startMillis >= period)  //test whether the period has elapsed
   {
     printLocalTime();
@@ -236,6 +236,7 @@ void printHello(){
 void WifiOn(){
 
   Serial.printf("Connecting to %s ", ssid);
+  WiFi.setHostname("ESP");
   WiFi.begin(ssid, password);
   //WiFi.begin();
   int retry = 0;
