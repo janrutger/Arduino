@@ -9,7 +9,7 @@
 #include <Adafruit_BME680.h>
 #include <Wire.h>
 #include "FS.h"
-#include <LittleFS.h>
+#include <LITTLEFS.h> //LittleFS.h when using 2.0.0 of esp-core
 
 //Sleep modus and wait/delay
 #define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
@@ -110,13 +110,13 @@ void setup() {
 
 
 //Storage
-  if(!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
+  if(!LITTLEFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
         Serial.println("LittleFS Mount Failed");
         return;
     } else {
       Serial.print("LittleFS Mounted, ");
     }
-  if(LittleFS.exists("/index.html")) {
+  if(LITTLEFS.exists("/index.html")) {
     Serial.println("INDEX file found");
 //    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
 //      request->send(200, "text/plain", "Hello, world");
@@ -236,7 +236,7 @@ void printHello(){
 void WifiOn(){
 
   Serial.printf("Connecting to %s ", ssid);
-  WiFi.setHostname("ESP");
+  WiFi.setHostname("ESP32-s2");
   WiFi.begin(ssid, password);
   //WiFi.begin();
   int retry = 0;
