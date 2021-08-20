@@ -1,15 +1,17 @@
+#include <Arduino.h>
+
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include "mbedtls/md.h"
 #include <ezTime.h>
 #include <WiFi.h>
-//#include <AsyncTCP.h>
-//#include <ESPAsyncWebServer.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME680.h>
 #include <Wire.h>
 #include "FS.h"
-#include <LITTLEFS.h> //LittleFS.h when using 2.0.0 of esp-core
+#include <LITTLEFS.h> //LittleFS.h when using 2.0.0 of the esp-core
 
 //Sleep modus and wait/delay
 #define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
@@ -64,8 +66,13 @@ int BuffSize = 0;
 
 Adafruit_BME680 bme;
 
+//filesysem FS and Webserver
 #define FORMAT_LITTLEFS_IF_FAILED false
-//AsyncWebServer server(80);
+AsyncWebServer server(80);
+
+void notFound(AsyncWebServerRequest *request) {
+    request->send(404, "text/plain", "Not found");
+}
 
 
 void setup() {
@@ -119,13 +126,15 @@ void setup() {
   if(LITTLEFS.exists("/index.html")) {
     Serial.println("INDEX file found");
 //    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-//      request->send(200, "text/plain", "Hello, world");
-//
-//    server.onNotFound(notFound);
-
-//    server.begin();
-    
+//      request->send(200, "text/plain", "Aleks, Hello from the ESP32 world");
 //    });
+    server.serveStatic("/", LITTLEFS, "/").setDefaultFile("index.html");
+    
+    server.onNotFound(notFound);
+
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+    server.begin();
+        
   }
 }
 
@@ -230,13 +239,14 @@ String getUtcTime() {
 }
 
 void printHello(){
-  Serial.println("Hello World, Iam ESP32-S2 Thing Plus");
+  Serial.println("Hello World, Iam ESP32 Thing Plus");
 }
 
 void WifiOn(){
 
   Serial.printf("Connecting to %s ", ssid);
-  WiFi.setHostname("ESP32-s2");
+  WiFi.mode(WIFI_STA);
+  WiFi.setHostname("esp32");
   WiFi.begin(ssid, password);
   //WiFi.begin();
   int retry = 0;
