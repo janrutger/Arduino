@@ -5,7 +5,7 @@ void SampleStore() {
   Serial.println(Samples.SampleCount);
 
   if (Samples.SampleCount >= 17){
-    WifiReconnect();    //After light_sleep
+    //WifiReconnect();    //After light_sleep
     events();
     Serial.println("--------------------------");
 

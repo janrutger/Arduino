@@ -271,10 +271,10 @@ void WifiReconnect(){
   int retry = 0;
   while (WiFi.status() != WL_CONNECTED && retry < 16 ) {
       delay(500);
-      retry = retry + 1;
       //WiFi.reconnect();
       Serial.print(".");
       }
+  delay(1000);
   Serial.println(" CONNECTED");
 }
 
