@@ -6,11 +6,11 @@ function refresh(parm_id){
     console.log("Func refresh")
     console.log(parm_id)
     if (parm_id == 0){
-        url = "http://rest:5000/slice/json/now/170/5/ESP-Meetstation/temperature"
+        url = "http://rest:5000/slice/json/now/170/5/BSEC-Meetstation/temperature"
     } else if (parm_id == 1){
-        url = "http://rest:5000/slice/json/now/170/5/ESP-Meetstation/humidity"
+        url = "http://rest:5000/slice/json/now/170/5/BSEC-Meetstation/humidity"
     } else if (parm_id == 2){
-        url = "http://rest:5000/slice/json/now/170/5/ESP-Meetstation/air-quality"
+        url = "http://rest:5000/slice/json/now/170/5/BSEC-Meetstation/air-resistance"
     }
 
     fetch(url)

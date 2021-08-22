@@ -1,27 +1,19 @@
 #include "bsec.h"
 
-// Helper functions declarations
-//void checkIaqSensorStatus(void);
-//void errLeds(void);
-
-
-
-
 
 // Create an object of the class Bsec
 Bsec iaqSensor;
 
 String output; //to print the error messages
 
-// Entry point for the example
+// Entry point for the setup-loop
 void BSECsetup(void)
 {
 
   Wire.begin();
 
   iaqSensor.begin(BME680_I2C_ADDR_SECONDARY, Wire);
-  //output = "\nBSEC library version " + String(iaqSensor.version.major) + "." + String(iaqSensor.version.minor) + "." + String(iaqSensor.version.major_bugfix) + "." + String(iaqSensor.version.minor_bugfix);
-  //Serial.println(output);
+  
   checkIaqSensorStatus();
 
   bsec_virtual_sensor_t sensorList[10] = {
@@ -40,29 +32,25 @@ void BSECsetup(void)
   iaqSensor.updateSubscription(sensorList, 10, BSEC_SAMPLE_RATE_LP);
   checkIaqSensorStatus();
 
-  // Print the header
-  //output = "Timestamp [ms], raw temperature [°C], pressure [hPa], raw relative humidity [%], gas [Ohm], IAQ, IAQ accuracy, temperature [°C], relative humidity [%], Static IAQ, CO2 equivalent, breath VOC equivalent";
-  //Serial.println(output);
 }
 
 
 void ReadSample(){
-  //bme.performReading();
-
-  Samples.TempTotal   = Samples.TempTotal + iaqSensor.temperature;
-  Samples.HumTotal    = Samples.HumTotal  + iaqSensor.humidity;
-  Samples.PresTotal   = Samples.PresTotal + iaqSensor.pressure / 100.0;
-  Samples.ResTotal    = Samples.ResTotal  + iaqSensor.gasResistance / 1000.0;
-  Samples.SampleCount = Samples.SampleCount + 1;
+  if (iaqSensor.run()) { // If new data is available
+    Samples.TempTotal   = Samples.TempTotal + iaqSensor.temperature;
+    Samples.HumTotal    = Samples.HumTotal  + iaqSensor.humidity;
+    Samples.PresTotal   = Samples.PresTotal + iaqSensor.pressure / 100.0;
+    Samples.ResTotal    = Samples.ResTotal  + iaqSensor.gasResistance / 1000.0;
+    Samples.IaqTotal    = Samples.IaqTotal  + iaqSensor.iaq;
+    Samples.Co2Total    = Samples.Co2Total  + iaqSensor.co2Equivalent;
+    Samples.VocTotal    = Samples.VocTotal  + iaqSensor.breathVocEquivalent;
+    Samples.SampleCount = Samples.SampleCount + 1;
+    Serial.print("Accuracy: ");
+    Serial.println(iaqSensor.iaqAccuracy);
+    } else {
+    checkIaqSensorStatus();
+  }
 }
-
-
-
-
-
-
-
-
 
 
 

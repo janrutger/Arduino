@@ -1,7 +1,7 @@
 void SampleStore() {
-  Serial.print("Read Sample #");
+  Serial.println("Read Sample #");
   ReadSample();
-  //Serial.println(Samples.TempTotal);
+  Serial.print("Count: ");
   Serial.println(Samples.SampleCount);
 
   if (Samples.SampleCount >= 17){
@@ -9,7 +9,7 @@ void SampleStore() {
     events();
     Serial.println("--------------------------");
 
-    for (int num = 0; num <= 3; num++){
+    for (int num = 0; num <= 6; num++){
     Value = GetParameter(num);
     Serial.print("Ringbuffer Address : ");
     Serial.println(Index % maxValues);
@@ -50,7 +50,10 @@ void SampleStore() {
     Samples.HumTotal = 0;
     Samples.PresTotal = 0;
     Samples.ResTotal = 0;
-    Samples.SampleCount = 0; 
+    Samples.IaqTotal = 0;
+    Samples.Co2Total = 0;
+    Samples.VocTotal = 0;
+    Samples.SampleCount = 0;
   }
 
   

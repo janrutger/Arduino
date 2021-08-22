@@ -7,9 +7,6 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-//#include <Adafruit_Sensor.h>
-//#include <Adafruit_BME680.h>
-//#include <Wire.h>
 #include "FS.h"
 #include <LITTLEFS.h> //LittleFS.h when using 2.0.0 of the esp-core
 
@@ -35,12 +32,15 @@ mbedtls_md_context_t ctx;
 mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
 
 
-////sensor
+////sensor Sample and Value variable
 struct samples{
   float TempTotal;
   float HumTotal;
   float PresTotal;
   float ResTotal;
+  float IaqTotal;
+  float Co2Total;
+  float VocTotal;
   int   SampleCount;
 };
 samples Samples;
@@ -63,8 +63,7 @@ const int maxValues = 72;
 value Values[maxValues];
 int Index = 0;
 int BuffSize = 0;
-//
-//Adafruit_BME680 bme;
+
 
 //filesysem FS and Webserver
 #define FORMAT_LITTLEFS_IF_FAILED false
@@ -83,7 +82,6 @@ void setup() {
   
 
  //init and get the time, Wifi
- // Wire.begin();
   startMillis = millis();
   
   WifiOn();
@@ -93,21 +91,8 @@ void setup() {
   printLocalTime();
   //WifiOff();
 
-  //init sensor
-//  if (!bme.begin())
-//  {
-//    Serial.println("Could not find a valid BME680 sensor, check wiring!");
-//    while (1);
-//  }
-//  
-//  // Set up oversampling and filter initialization
-//  bme.setTemperatureOversampling(BME680_OS_8X);
-//  bme.setHumidityOversampling(BME680_OS_2X);
-//  bme.setPressureOversampling(BME680_OS_4X);
-//  bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
-//  bme.setGasHeater(320, 150); // 320*C for 150 ms
 
-  BSECsetup();
+  BSECsetup(); //See BSECsensor.ino
 
   
   ReadSample();   //to prefent first false reading
@@ -115,6 +100,9 @@ void setup() {
   Samples.HumTotal = 0;
   Samples.PresTotal = 0;
   Samples.ResTotal = 0;
+  Samples.IaqTotal = 0;
+  Samples.Co2Total = 0;
+  Samples.VocTotal = 0;
   Samples.SampleCount = 0;
 
 
@@ -143,7 +131,7 @@ void setup() {
 void loop() { 
   
 
-  currentMillis = millis() - period;  //get the current "time" (actually the number of milliseconds since the program started)
+  currentMillis = millis();  //get the current "time" (actually the number of milliseconds since the program started)
   if (currentMillis - startMillis >= period)  //test whether the period has elapsed
   {
     printLocalTime();
@@ -167,28 +155,16 @@ void loop() {
 
 
 //--------------------------------------------------------
-//void ReadSample(){
-//  bme.performReading();
-//
-//  Samples.TempTotal   = Samples.TempTotal + bme.temperature;
-//  Samples.HumTotal    = Samples.HumTotal  + bme.humidity;
-//  Samples.PresTotal   = Samples.PresTotal + bme.pressure / 100.0;
-//  Samples.ResTotal    = Samples.ResTotal  + bme.gas_resistance / 1000.0;
-//  Samples.SampleCount = Samples.SampleCount + 1;
-//}
-
 
 value GetParameter(int parameter){
   value thisVal;
-  //bme.performReading();
   
   thisVal.TimeFor   = getLocalTime();
   thisVal.TimeAt    = getUtcTime();
-  thisVal.StationId = "ESP-Meetstation";
+  thisVal.StationId = "BSEC-Meetstation";
   switch (parameter){
     case 0:
       thisVal.parameter = "temperature";
-      //thisVal.value     = bme.temperature;
       thisVal.value     = Samples.TempTotal / Samples.SampleCount;
       thisVal.unit      = "C";
       thisVal.symbol    = "T";
@@ -196,7 +172,6 @@ value GetParameter(int parameter){
     break;
     case 1:
       thisVal.parameter = "pressure";
-      //thisVal.value     = bme.pressure / 100.0;
       thisVal.value     = Samples.PresTotal / Samples.SampleCount;
       thisVal.unit      = "hPa";
       thisVal.symbol    = "P";
@@ -204,18 +179,37 @@ value GetParameter(int parameter){
      break;
      case 2:
       thisVal.parameter = "humidity";
-      //thisVal.value     = bme.humidity;
       thisVal.value     = Samples.HumTotal / Samples.SampleCount;
       thisVal.unit      = "%";
       thisVal.symbol    = "H";
       thisVal.SampleId  = SHA256(thisVal.StationId, thisVal.TimeAt,thisVal.parameter);
      break;
      case 3:
-      thisVal.parameter = "air-quality";
-      //thisVal.value     = bme.gas_resistance / 1000.0;
+      thisVal.parameter = "air-resistance";
       thisVal.value     = Samples.ResTotal / Samples.SampleCount;
       thisVal.unit      = "KOhms";
       thisVal.symbol    = "r";
+      thisVal.SampleId  = SHA256(thisVal.StationId, thisVal.TimeAt,thisVal.parameter);
+     break;
+     case 4:
+      thisVal.parameter = "iaq";
+      thisVal.value     = Samples.IaqTotal / Samples.SampleCount;
+      thisVal.unit      = "";
+      thisVal.symbol    = "IAQ";
+      thisVal.SampleId  = SHA256(thisVal.StationId, thisVal.TimeAt,thisVal.parameter);
+     break;
+     case 5:
+      thisVal.parameter = "co2";
+      thisVal.value     = Samples.Co2Total / Samples.SampleCount;
+      thisVal.unit      = "ppm";
+      thisVal.symbol    = "Co2";
+      thisVal.SampleId  = SHA256(thisVal.StationId, thisVal.TimeAt,thisVal.parameter);
+     break;
+     case 6:
+      thisVal.parameter = "voc";
+      thisVal.value     = Samples.VocTotal / Samples.SampleCount;
+      thisVal.unit      = "ppm";
+      thisVal.symbol    = "voc";
       thisVal.SampleId  = SHA256(thisVal.StationId, thisVal.TimeAt,thisVal.parameter);
      break;
     }
@@ -314,7 +308,7 @@ String SHA256(String StationId, String TimeFor, String Parameter){
 
 String makeJSON(){
   String JSONdoc;
-  DynamicJsonDocument doc(17408);
+  DynamicJsonDocument doc(29016);
 
 
   for (int i = 0; i < BuffSize; i++){
