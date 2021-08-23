@@ -16,8 +16,10 @@
 #define TIME_TO_SLEEP  60*1
 
 unsigned long startMillis;  
+unsigned long startSample;
 unsigned long currentMillis;
-const unsigned long period = 60000;
+unsigned long nu;
+const unsigned long period = 60000*17;
 
 //wifi
 const char* ssid       = "H369A6E844A";
@@ -83,6 +85,7 @@ void setup() {
 
  //init and get the time, Wifi
   startMillis = millis();
+  startSample = millis();
   
   WifiOn();
   setDebug(INFO);
@@ -129,7 +132,11 @@ void setup() {
 }
 
 void loop() { 
-  
+  nu = millis();
+  if (nu - startSample >= 1500) {
+    ReadSample();
+    startSample = nu;
+  }
 
   currentMillis = millis();  //get the current "time" (actually the number of milliseconds since the program started)
   if (currentMillis - startMillis >= period)  //test whether the period has elapsed
@@ -194,7 +201,7 @@ value GetParameter(int parameter){
      case 4:
       thisVal.parameter = "iaq";
       thisVal.value     = Samples.IaqTotal / Samples.SampleCount;
-      thisVal.unit      = "";
+      thisVal.unit      = "-";
       thisVal.symbol    = "IAQ";
       thisVal.SampleId  = SHA256(thisVal.StationId, thisVal.TimeAt,thisVal.parameter);
      break;
@@ -202,14 +209,14 @@ value GetParameter(int parameter){
       thisVal.parameter = "co2";
       thisVal.value     = Samples.Co2Total / Samples.SampleCount;
       thisVal.unit      = "ppm";
-      thisVal.symbol    = "Co2";
+      thisVal.symbol    = "CO2";
       thisVal.SampleId  = SHA256(thisVal.StationId, thisVal.TimeAt,thisVal.parameter);
      break;
      case 6:
       thisVal.parameter = "voc";
       thisVal.value     = Samples.VocTotal / Samples.SampleCount;
       thisVal.unit      = "ppm";
-      thisVal.symbol    = "voc";
+      thisVal.symbol    = "VOC";
       thisVal.SampleId  = SHA256(thisVal.StationId, thisVal.TimeAt,thisVal.parameter);
      break;
     }
@@ -269,7 +276,7 @@ void WifiReconnect(){
       Serial.print(".");
       }
   delay(1000);
-  Serial.println(" CONNECTED");
+  Serial.println("  CONNECTED");
 }
 
 
@@ -308,7 +315,7 @@ String SHA256(String StationId, String TimeFor, String Parameter){
 
 String makeJSON(){
   String JSONdoc;
-  DynamicJsonDocument doc(29016);
+  DynamicJsonDocument doc(17408);
 
 
   for (int i = 0; i < BuffSize; i++){

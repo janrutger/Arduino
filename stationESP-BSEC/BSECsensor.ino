@@ -45,11 +45,12 @@ void ReadSample(){
     Samples.Co2Total    = Samples.Co2Total  + iaqSensor.co2Equivalent;
     Samples.VocTotal    = Samples.VocTotal  + iaqSensor.breathVocEquivalent;
     Samples.SampleCount = Samples.SampleCount + 1;
-    Serial.print("Accuracy: ");
-    Serial.println(iaqSensor.iaqAccuracy);
-    } else {
-    checkIaqSensorStatus();
-  }
+    if (Samples.SampleCount % 10 == 0) {
+      Serial.print("-");
+      Serial.print(iaqSensor.iaqAccuracy);
+    }} else {
+        checkIaqSensorStatus();
+      }
 }
 
 

@@ -1,10 +1,10 @@
 void SampleStore() {
-  Serial.println("Read Sample #");
-  ReadSample();
-  Serial.print("Count: ");
-  Serial.println(Samples.SampleCount);
+  Serial.println("");
+  //ReadSample();
+  //Serial.print("Count: ");
+  //Serial.println(Samples.SampleCount);
 
-  if (Samples.SampleCount >= 17){
+  //if (Samples.SampleCount >= 17){
     //WifiReconnect();    //After light_sleep, not as server
     events();
     Serial.println("--------------------------");
@@ -54,7 +54,7 @@ void SampleStore() {
     Samples.Co2Total = 0;
     Samples.VocTotal = 0;
     Samples.SampleCount = 0;
-  }
+  //}
 
   
 }
