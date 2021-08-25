@@ -141,6 +141,7 @@ void loop() {
   currentMillis = millis();  //get the current "time" (actually the number of milliseconds since the program started)
   if (currentMillis - startMillis >= period)  //test whether the period has elapsed
   {
+    Serial.println("");
     printLocalTime();
     startMillis = currentMillis;  //IMPORTANT to save the start time of the current LED state.
     SampleStore();
@@ -315,7 +316,7 @@ String SHA256(String StationId, String TimeFor, String Parameter){
 
 String makeJSON(){
   String JSONdoc;
-  DynamicJsonDocument doc(17408);
+  DynamicJsonDocument doc(33957);
 
 
   for (int i = 0; i < BuffSize; i++){
